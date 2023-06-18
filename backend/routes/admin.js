@@ -76,4 +76,36 @@ router.post('/window', async (req, res, next) => {
     );
 });
 
+// 차량 종류를 추가, 즉 차량 정보를 가져와서 차량 모델이 늘어남
+router.post('/addcar', async (req, res, next) => {
+    await db.query(
+        `INSERT INTO CARMODEL
+            VALUES ('${req.body.modelname}','${req.body.vehicletype}','${req.body.rentrateperday}', '${req.body.fuel}','${req.body.numberofseats}')`,
+        { autoCommit: true },
+        result => {
+            if (result) {
+                res.status(200).json({ result: 'success' });
+            } else {
+                res.status(202).json({ result: 'fail' });
+            }
+        },
+    );
+});
+
+// 차량을 추가, 즉 고유한 차량 번호를 가진 자동차를 추가
+router.post('/addrentcar', async (req, res, next) => {
+    await db.query(
+        `INSERT INTO RENTCAR (licenseplateno, modelname)
+            VALUES ('${req.body.licenseplateno}','${req.body.modelname}')`,
+        { autoCommit: true },
+        result => {
+            if (result) {
+                res.status(200).json({ result: 'success' });
+            } else {
+                res.status(202).json({ result: 'fail' });
+            }
+        },
+    );
+});
+
 module.exports = router;
