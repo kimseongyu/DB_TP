@@ -4,6 +4,7 @@ var db = require('../public/javascripts/query');
 
 // 매시 정각 scheduler가 대출기간이 끝난 차량을 이전 대여 내역(PreviousRental)으로 옮기고
 // 대출기간이 시작된 차량을 예약내역(Reservation)에서 현재 대여 내역(RentCar)으로 옮긴다.
+// */10 * * * * * <- 시간 이걸로 바꿔주면 함수 10초마다 실행됨
 schedule.scheduleJob(`0 0 15 * * *`, async () => {
     // 대출기간이 끝난 차량정보를 PreviousRental로 옮긴다.
     // CARMODEL에서 RENTRATEPERDAY를 사용하여 지불한 금액을 삽입한다.
@@ -14,7 +15,7 @@ schedule.scheduleJob(`0 0 15 * * *`, async () => {
     (RETURNDATE - DATERENTED) * (SELECT RENTRATEPERDAY FROM CARMODEL C WHERE C.MODELNAME = R.MODELNAME)
     , R.CNO
     FROM RENTCAR R
-    WHERE RETURNDATE = SYSDATE-1`,
+    WHERE RETURNDATE <= SYSDATE-1`,
         { autoCommit: true },
         result => {},
     );
@@ -28,7 +29,7 @@ schedule.scheduleJob(`0 0 15 * * *`, async () => {
         DATERENTED = NULL,
         RETURNDATE = NULL,
         CNO = NULL
-    WHERE RETURNDATE = SYSDATE-1`,
+    WHERE RETURNDATE <= SYSDATE-1`,
         { autoCommit: true },
         result => {},
     );
@@ -49,7 +50,7 @@ schedule.scheduleJob(`0 0 15 * * *`, async () => {
                 AND RE.STARTDATE <= SYSDATE)
     WHERE R.LICENSEPLATENO IN (SELECT RE.LICENSEPLATENO
                 FROM RESERVATION RE
-                WHERE RE.STARTDATE = SYSDATE)`,
+                WHERE RE.STARTDATE <= SYSDATE)`,
         { autoCommit: true },
         result => {},
     );
@@ -57,7 +58,7 @@ schedule.scheduleJob(`0 0 15 * * *`, async () => {
     // 예약목록인 reservation table에서 대출기간이 시작된 차량들의 정보를 삭제한다.
     await db.query(
         `DELETE FROM RESERVATION
-    WHERE STARTDATE = SYSDATE`,
+    WHERE STARTDATE <= SYSDATE`,
         { autoCommit: true },
         result => {},
     );
